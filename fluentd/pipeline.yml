@@ -10,7 +10,7 @@ resources:
   - name: fluentd-base-image
     type: registry-image
     source:
-      repository: fluentd
+      repository: fluent/fluentd
       username: {{docker-registry-user}}
       password: {{docker-registry-password}}
       tag: v1.12.1-debian-1.0
@@ -18,27 +18,16 @@ resources:
     type: registry-image
     source:
       repository: clutonik/fluentd
-      username: ((devops.artifactory-user))
-      password: ((devops.artifactory-password))
+      username: {{docker-registry-user}}
+      password: {{docker-registry-password}}
       tag: latest
 jobs:
-- name: update-pipeline
-  serial: true
-  plan:
-  - get: code
-    trigger: true
-  - set_pipeline: self
-    file: code/fluentd/pipeline.yml
-      
 - name: build-fluentd-image
   serial: true
   plan:
   - get: code
-    passed:
-      - update-pipeline
     trigger: true
   - get: fluentd-base-image
-    trigger: true
     params: {format: oci}
   - task: build
     privileged: true
@@ -63,7 +52,7 @@ jobs:
             cat code/.git/short_ref > image/additional-tags
       params:
         IMAGE_ARG_base_image: fluentd-base-image/image.tar
-        CONTEXT: code
+        CONTEXT: code/fluentd
   - put: fluentd-custom-image
     params:
       image: image/image.tar
