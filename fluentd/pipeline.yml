@@ -1,0 +1,59 @@
+---
+resources:
+  - name: code
+    type: git
+    source:
+      uri: https://github.com/clutonik/concourse-pipelines.git
+      branch: initial 
+      username: {{git-user}}
+      password: {{git-password}}
+  - name: fluentd-base-image
+    type: registry-image
+    source:
+      repository: fluent/fluentd
+      username: {{docker-registry-user}}
+      password: {{docker-registry-password}}
+      tag: v1.12.1-debian-1.0
+  - name: fluentd-custom-image
+    type: registry-image
+    source:
+      repository: clutonik/fluentd
+      username: {{docker-registry-user}}
+      password: {{docker-registry-password}}
+      tag: latest
+jobs:
+- name: build-fluentd-image
+  serial: true
+  plan:
+  - get: code
+    trigger: true
+  - get: fluentd-base-image
+    params: {format: oci}
+  - task: build
+    privileged: true
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: vito/oci-build-task
+          tag: 0.7
+      inputs:
+        - name: fluentd-base-image
+        - name: code
+      outputs:
+        - name: image
+      run:
+        path: sh
+        args:
+          - -exc
+          - |
+            build
+            cat code/.git/short_ref > image/additional-tags
+      params:
+        IMAGE_ARG_base_image: fluentd-base-image/image.tar
+        CONTEXT: code/fluentd
+  - put: fluentd-custom-image
+    params:
+      image: image/image.tar
+      additional_tags: image/additional-tags
