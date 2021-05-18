@@ -4,7 +4,7 @@ resources:
     type: git
     source:
       uri: https://github.com/clutonik/concourse-pipelines.git
-      branch: initial 
+      branch: main
       username: {{git-user}}
       password: {{git-password}}
   - name: fluentd-base-image
@@ -53,6 +53,22 @@ jobs:
       params:
         IMAGE_ARG_base_image: fluentd-base-image/image.tar
         CONTEXT: code/fluentd
+  - task: test
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: golang
+      inputs:
+        - name: fluentd-base-image
+        - name: code
+      run:
+        path: go
+        args:
+          - -exc
+          - |
+            run code/tests/test.py
   - put: fluentd-custom-image
     params:
       image: image/image.tar
