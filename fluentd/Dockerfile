@@ -9,8 +9,6 @@ RUN apt-get update -y && \
     apt-get install build-essential -y && \
     apt-get clean
 
-# # Switch back to fluent
-USER fluent
 VOLUME ["/app"]
 # Set working directory as /app
 WORKDIR /fluentd
@@ -18,6 +16,8 @@ WORKDIR /fluentd
 COPY Gemfile /fluentd
 RUN bundle install
 
+# # Switch back to fluent
+USER fluent
 # Copy docker-entrypoint
 COPY docker-entrypoint.sh /bin/
 # List of ports exposed by image
