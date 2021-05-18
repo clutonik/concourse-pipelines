@@ -15,7 +15,7 @@ VOLUME ["/app"]
 # Set working directory as /app
 WORKDIR /fluentd
 # Copy Gemfile and run install
-COPY fluentd/Gemfile /fluentd
+COPY Gemfile /fluentd
 RUN bundle install
 
 # Copy docker-entrypoint
